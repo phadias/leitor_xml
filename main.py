@@ -7,7 +7,8 @@ import etl
 
 
 st.set_page_config(page_title="Leitor de XMLs em lote", layout="wide")
-st.title("📦 Leitor de Múltiplos XMLs → DataFrame por Arquivo")
+st.title("📦 Conversor XMLs → Arquivo Excel")
+st.markdown("Converte XMLs do Terceiro CEFERTIL(Retorno de industrialização) para arquivo excel com os códigos JBS")
 
 uploaded_files = st.file_uploader(
     "Selecione um ou mais arquivos XML",
