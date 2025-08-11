@@ -24,8 +24,8 @@ def tratar_xml(uploaded_files):
 
     det = data['nfeProc']['NFe']['infNFe']['det']
     serie = data['nfeProc']['NFe']['infNFe']['ide']['serie']
-    natOp = data['nfeProc']['NFe']['infNFe']['ide']['natOp']
     nnf = data['nfeProc']['NFe']['infNFe']['ide']['nNF']
+    natOp = data['nfeProc']['NFe']['infNFe']['ide']['natOp']
     emit_cnpj = data['nfeProc']['NFe']['infNFe']['emit']['CNPJ']
     emit_nome = data['nfeProc']['NFe']['infNFe']['emit']['xNome']
     dest_cnpj = data['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
@@ -33,7 +33,7 @@ def tratar_xml(uploaded_files):
     infocompl = data['nfeProc']['NFe']['infNFe']['infAdic']['infCpl']
 
     df = pd.json_normalize(det, sep='.')
-    novas_colunas = ['Série', 'NF','Operação', 'Emitente CNPJ', 'Emitente Nome',
+    novas_colunas = ['Série', 'NF', 'Operação', 'Emitente CNPJ', 'Emitente Nome',
                      'Destinatátio CNPJ', 'Destinatário Nome', 'Informações Complementares']
     dados_novas_colunas = [serie, nnf, natOp, emit_cnpj,
                            emit_nome, dest_cnpj, dest_nome, infocompl]
@@ -44,7 +44,6 @@ def tratar_xml(uploaded_files):
     colunas = novas_colunas + \
         [col for col in df.columns if col not in novas_colunas]
     df = df[colunas]
-    df.dropna(axis='columns', how='all')
 
     df['Código JBS'] = coletar_codigo_jbs(df)
 
