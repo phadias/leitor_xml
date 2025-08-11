@@ -19,7 +19,6 @@ def tratar_xml(uploaded_files):
     det = data['nfeProc']['NFe']['infNFe']['det']
     serie = data['nfeProc']['NFe']['infNFe']['ide']['serie']
     nnf = data['nfeProc']['NFe']['infNFe']['ide']['nNF']
-    nfref = data['nfeProc']['NFe']['infNFe']['ide']['NFref']
     emit_cnpj = data['nfeProc']['NFe']['infNFe']['emit']['CNPJ']
     emit_nome = data['nfeProc']['NFe']['infNFe']['emit']['xNome']
     dest_cnpj = data['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
