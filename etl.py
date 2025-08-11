@@ -2,6 +2,7 @@ import pandas as pd
 import xmltodict
 import os
 
+
 def tratar_xml(uploaded_files):
 
     def abrir_arquivo(uploaded_file):
@@ -9,39 +10,44 @@ def tratar_xml(uploaded_files):
 
     def coletar_codigo_jbs(df):
         list = []
-        for i,info in enumerate(df['infAdProd']):
+        for i, info in enumerate(df['infAdProd']):
             list.append(info.split('Cod. Fabricante: ',)[1].split(' ')[0])
         return list
-    
+
     data = abrir_arquivo(uploaded_files)
-    
+
     det = data['nfeProc']['NFe']['infNFe']['det']
     serie = data['nfeProc']['NFe']['infNFe']['ide']['serie']
     nnf = data['nfeProc']['NFe']['infNFe']['ide']['nNF']
     nfref = data['nfeProc']['NFe']['infNFe']['ide']['NFref']
     emit_cnpj = data['nfeProc']['NFe']['infNFe']['emit']['CNPJ']
     emit_nome = data['nfeProc']['NFe']['infNFe']['emit']['xNome']
-    dest_cnpj =  data['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
+    dest_cnpj = data['nfeProc']['NFe']['infNFe']['dest']['CNPJ']
     dest_nome = data['nfeProc']['NFe']['infNFe']['dest']['xNome']
     infocompl = data['nfeProc']['NFe']['infNFe']['infAdic']['infCpl']
 
     df = pd.json_normalize(det, sep='.')
-    novas_colunas = ['Série', 'NF', 'Emitente CNPJ', 'Emitente Nome', 'Destinatátio CNPJ', 'Destinatário Nome', 'Informações Complementares']
-    dados_novas_colunas= [serie, nnf, emit_cnpj, emit_nome, dest_cnpj, dest_nome, infocompl]
+    novas_colunas = ['Série', 'NF', 'Emitente CNPJ', 'Emitente Nome',
+                     'Destinatátio CNPJ', 'Destinatário Nome', 'Informações Complementares']
+    dados_novas_colunas = [serie, nnf, emit_cnpj,
+                           emit_nome, dest_cnpj, dest_nome, infocompl]
 
-    for i,coluna in enumerate(novas_colunas):
+    for i, coluna in enumerate(novas_colunas):
         df[coluna] = dados_novas_colunas[i]
 
-    colunas = novas_colunas + [col for col in df.columns if col not in novas_colunas]
+    colunas = novas_colunas + \
+        [col for col in df.columns if col not in novas_colunas]
     df = df[colunas]
     df.dropna(axis='columns', how='all')
 
-    df['Código JBS'] = coletar_codigo_jbs(df)    
+    df['Código JBS'] = coletar_codigo_jbs(df)
 
     df = df[['Série', 'NF', 'Emitente Nome', 'Emitente CNPJ',
-       'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares','Código JBS', 'prod.xProd','prod.uCom', 'prod.qCom', 'prod.vUnCom', 'prod.vProd']]
-
+             'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares', 'Código JBS', 'prod.xProd', 'prod.uCom', 'prod.qCom', 'prod.vUnCom', 'prod.vProd']]
+    df.columns = ['Série', 'NF', 'Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares',
+                  'Código JBS', 'Produto', 'Unidade de Medida', 'Qtde', 'Valor Unitário', 'Valor Total']
     return df
+
 
 def concatenar_df(uploaded_files):
 
@@ -51,9 +57,10 @@ def concatenar_df(uploaded_files):
         df = tratar_xml(uploaded_file.read())
         todos_df.append(df)
 
-    list_str = ['Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares', 'prod.xProd', 'prod.uCom']
+    list_str = ['Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome',
+                'Destinatátio CNPJ', 'Informações Complementares', 'Produto', 'Unidade de Medida']
     list_int = ['Série', 'NF', 'Código JBS', ]
-    list_float = ['prod.qCom', 'prod.vUnCom', 'prod.vProd']
+    list_float = ['Qtde', 'Valor Unitário', 'Valor Total']
 
     df_tratado = pd.concat(todos_df, ignore_index=True)
 
@@ -63,6 +70,5 @@ def concatenar_df(uploaded_files):
         df_tratado[coluna] = df_tratado[coluna].astype('float64')
     for coluna in list_int:
         df_tratado[coluna] = df_tratado[coluna].astype('int64')
-    
+
     return df_tratado
-    
