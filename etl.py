@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 import xmltodict
 import os
 
@@ -10,14 +11,20 @@ def tratar_xml(uploaded_files):
 
     def coletar_codigo_jbs(df):
         list = []
-        for i, info in enumerate(df['infAdProd']):
-            list.append(info.split('Cod. Fabricante: ',)[1].split(' ')[0])
-        return list
+        try:
+            for i, info in enumerate(df['infAdProd']):
+                list.append(info.split('Cod. Fabricante: ',)[1].split(' ')[0])
+            return list
+        except:
+            return 0
+
 
     data = abrir_arquivo(uploaded_files)
+    
 
     det = data['nfeProc']['NFe']['infNFe']['det']
     serie = data['nfeProc']['NFe']['infNFe']['ide']['serie']
+    natOp = data['nfeProc']['NFe']['infNFe']['ide']['natOp']
     nnf = data['nfeProc']['NFe']['infNFe']['ide']['nNF']
     emit_cnpj = data['nfeProc']['NFe']['infNFe']['emit']['CNPJ']
     emit_nome = data['nfeProc']['NFe']['infNFe']['emit']['xNome']
@@ -26,9 +33,9 @@ def tratar_xml(uploaded_files):
     infocompl = data['nfeProc']['NFe']['infNFe']['infAdic']['infCpl']
 
     df = pd.json_normalize(det, sep='.')
-    novas_colunas = ['Série', 'NF', 'Emitente CNPJ', 'Emitente Nome',
+    novas_colunas = ['Série', 'NF','Operação', 'Emitente CNPJ', 'Emitente Nome',
                      'Destinatátio CNPJ', 'Destinatário Nome', 'Informações Complementares']
-    dados_novas_colunas = [serie, nnf, emit_cnpj,
+    dados_novas_colunas = [serie, nnf, natOp, emit_cnpj,
                            emit_nome, dest_cnpj, dest_nome, infocompl]
 
     for i, coluna in enumerate(novas_colunas):
@@ -41,9 +48,9 @@ def tratar_xml(uploaded_files):
 
     df['Código JBS'] = coletar_codigo_jbs(df)
 
-    df = df[['Série', 'NF', 'Emitente Nome', 'Emitente CNPJ',
+    df = df[['Série', 'NF', 'Operação', 'Emitente Nome', 'Emitente CNPJ',
              'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares', 'Código JBS', 'prod.xProd', 'prod.uCom', 'prod.qCom', 'prod.vUnCom', 'prod.vProd']]
-    df.columns = ['Série', 'NF', 'Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares',
+    df.columns = ['Série', 'NF', 'Operação', 'Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome', 'Destinatátio CNPJ', 'Informações Complementares',
                   'Código JBS', 'Produto', 'Unidade de Medida', 'Qtde', 'Valor Unitário', 'Valor Total']
     return df
 
@@ -56,18 +63,21 @@ def concatenar_df(uploaded_files):
         df = tratar_xml(uploaded_file.read())
         todos_df.append(df)
 
-    list_str = ['Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome',
+    list_str = ['Operação', 'Emitente Nome', 'Emitente CNPJ', 'Destinatário Nome',
                 'Destinatátio CNPJ', 'Informações Complementares', 'Produto', 'Unidade de Medida']
-    list_int = ['Série', 'NF', 'Código JBS', ]
+    list_int = ['Série', 'NF', 'Código JBS']
     list_float = ['Qtde', 'Valor Unitário', 'Valor Total']
 
     df_tratado = pd.concat(todos_df, ignore_index=True)
 
     for coluna in list_str:
-        df_tratado[coluna] = df_tratado[coluna].astype('str')
+        if coluna in df_tratado:
+            df_tratado[coluna] = df_tratado[coluna].astype('str')
     for coluna in list_float:
-        df_tratado[coluna] = df_tratado[coluna].astype('float64')
+        if coluna in df_tratado:
+            df_tratado[coluna] = df_tratado[coluna].astype('float64')
     for coluna in list_int:
-        df_tratado[coluna] = df_tratado[coluna].astype('int64')
+        if coluna in df_tratado:
+            df_tratado[coluna] = df_tratado[coluna].astype('int64')
 
     return df_tratado
