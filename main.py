@@ -1,15 +1,23 @@
 import streamlit as st
-import xmltodict
 import pandas as pd
-import os
 from io import BytesIO
 import etl
+import time
 
-
-st.set_page_config(page_title="Leitor de XMLs em lote", layout="wide")
+# Configuração da página
+st.set_page_config(page_title="Leitor de XMLs em Lote", layout="wide")
 st.title("📦 Conversor XMLs → Arquivo Excel")
-st.markdown("Converte XMLs do Terceiro CEFERTIL(Retorno de industrialização) para arquivo excel com os códigos JBS")
+st.markdown(
+    "Converte **XMLs** "
+    "para um arquivo Excel contendo os códigos **JBS**."
+)
 
+# Cache para evitar reprocessamento desnecessário
+@st.cache_data
+def processar_xmls(files):
+    return etl.concatenar_df(files)
+
+# Upload dos arquivos
 uploaded_files = st.file_uploader(
     "Selecione um ou mais arquivos XML",
     type="xml",
@@ -17,25 +25,27 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
+    with st.spinner("⏳ Processando arquivos..."):
+        df = processar_xmls(uploaded_files)
 
-    # Concatenar todos os DataFrames
-    df = etl.concatenar_df(uploaded_files)
+    st.success(f"✅ {len(uploaded_files)} arquivos processados com sucesso! ({len(df)} linhas no total)")
 
-    st.success(f"{len(uploaded_files)} arquivos processados com sucesso!")
+    # Exibição do DataFrame
+    st.subheader("📋 Pré-visualização dos Dados")
+    st.dataframe(df, use_container_width=True)
 
-    # Mostrar o DataFrame completo
-    st.subheader("📋 DataFrame Final")
-    st.dataframe(df)
-
-    # 🔽 Download como Excel
+    # Preparar arquivo para download
     output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='XMLs')
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="XMLs")
     output.seek(0)
 
+    # Botão de download
     st.download_button(
         label="📥 Baixar Excel (.xlsx)",
         data=output,
         file_name="xmls_processados.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+else:
+    st.info("📄 Envie um ou mais arquivos XML para iniciar o processamento.")
