@@ -13,9 +13,12 @@ st.markdown(
 )
 
 # Cache para evitar reprocessamento desnecessário
+
+
 @st.cache_data
 def processar_xmls(files):
     return etl.concatenar_df(files)
+
 
 # Upload dos arquivos
 uploaded_files = st.file_uploader(
@@ -28,7 +31,8 @@ if uploaded_files:
     with st.spinner("⏳ Processando arquivos..."):
         df = processar_xmls(uploaded_files)
 
-    st.success(f"✅ {len(uploaded_files)} arquivos processados com sucesso! ({len(df)} linhas no total)")
+    st.success(
+        f"✅ {len(uploaded_files)} arquivos processados com sucesso! ({len(df)} linhas no total)")
 
     # Exibição do DataFrame
     st.subheader("📋 Pré-visualização dos Dados")
